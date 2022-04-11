@@ -88,7 +88,7 @@ Serial.setTimeout(2000);
 float h = sensor.getRH();
 float t = sensor.getTemp();
 
-char hc=char(h);
+char* hc=char(h);
 char tc=char(t);
 
 
@@ -105,26 +105,34 @@ char * key = "abcdefghijklmnop";
 char *plainText = "24.43";
 unsigned char cipherTextOutput[16];
 unsigned char decipheredTextOutput[4];
-encrypt(plainText, key, cipherTextOutput);
+encrypt(hc, key, cipherTextOutput);
 decrypt(cipherTextOutput, key, decipheredTextOutput);
 
 Serial.println("\nOriginal plain text:");
 Serial.println(plainText);
+Serial.println("\nCiphered text1:");
 
-Serial.println("\nCiphered text:");
 for (int i = 0; i < 16; i++) {
 
   char str[3];
-
   sprintf(str, "%02x", (int)cipherTextOutput[i]);
   Serial.print(str);
+  Serial.print(" ");
   }
+char str[32];
+Serial.println("\nCiphered text2:");
+{ 
+  sprintf(str, "%02x", (int)cipherTextOutput);
+  Serial.print(str);
+  Serial.print(" ");
+}
 
-Serial.println("\n\nDeciphered text:");
+Serial.println("\n\nDeciphered text1:");
 for (int i = 0; i < 5; i++) {
     Serial.print((char)decipheredTextOutput[i]);
   } 
 Serial.println();  
+ 
 
 
 // MQTT can only transmit strings
@@ -132,7 +140,7 @@ String hs="Hum: "+String((float)h)+" % ";
 String ts="Temp: "+String((float)t)+" C ";
 
 // PUBLISH to the MQTT Broker (topic = Temperature, defined at the beginning)
-if (client.publish(temperature_topic, String(t).c_str())) 
+if (client.publish(temperature_topic, str)) 
 {
   Serial.println("Temperature sent!");
 }
