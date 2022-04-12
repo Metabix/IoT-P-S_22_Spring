@@ -1,10 +1,9 @@
 #include "mbedtls/aes.h"
 #include "PubSubClient.h" // Connect and publish to the MQTT broker
-
+#include<stdio.h>
 
 // Code for the ESP32
 #include "WiFi.h" // Enables the ESP32 to connect to the local network (via WiFi)
-
 #include "SparkFun_Si7021_Breakout_Library.h" 
 
 Weather sensor;
@@ -84,12 +83,22 @@ void setup() {
 
 void loop() {
 Serial.setTimeout(2000);
+mbedtls_aes_context aes; 
+char * key = "abcdefghijklmnop";
+unsigned char ciphertemp[16];
+unsigned char cipherhum[16];
 
 float h = sensor.getRH();
 float t = sensor.getTemp();
+char temp_buf[10],hum_buf[10];
 
-char* hc=char(h);
-char tc=char(t);
+gcvt(t,5,temp_buf);
+char *temp_ptr = temp_buf;
+encrypt(temp_ptr, key, ciphertemp);
+
+gcvt(h,5,hum_buf);
+char *hum_ptr = hum_buf;
+encrypt(hum_ptr, key, cipherhum);
 
 
 Serial.print("Humidity:  ");
@@ -99,48 +108,40 @@ Serial.print("Temperature: ");
 Serial.print(t);
 Serial.println(" *C");
 
-mbedtls_aes_context aes;
- 
-char * key = "abcdefghijklmnop";
-char *plainText = "24.43";
-unsigned char cipherTextOutput[16];
-unsigned char decipheredTextOutput[4];
-encrypt(hc, key, cipherTextOutput);
-decrypt(cipherTextOutput, key, decipheredTextOutput);
 
-Serial.println("\nOriginal plain text:");
-Serial.println(plainText);
-Serial.println("\nCiphered text1:");
+
+Serial.println("\nOriginal plain temp:");
+Serial.println(t);
+Serial.println("\nCiphered temp1:");
 
 for (int i = 0; i < 16; i++) {
-
   char str[3];
-  sprintf(str, "%02x", (int)cipherTextOutput[i]);
+  sprintf(str, "%02x", (int)ciphertemp[i]);
   Serial.print(str);
   Serial.print(" ");
   }
-char str[32];
-Serial.println("\nCiphered text2:");
-{ 
-  sprintf(str, "%02x", (int)cipherTextOutput);
+const char* x= (const char*)ciphertemp;
+Serial.println(" ");
+Serial.println(x);  
+
+
+
+Serial.println("\nOriginal plain hum:");
+Serial.println(h);
+Serial.println("\nCiphered hum1:");
+
+for (int i = 0; i < 16; i++) {
+  char str[3];
+  sprintf(str, "%02x", (int)cipherhum[i]);
   Serial.print(str);
   Serial.print(" ");
-}
-
-Serial.println("\n\nDeciphered text1:");
-for (int i = 0; i < 5; i++) {
-    Serial.print((char)decipheredTextOutput[i]);
-  } 
-Serial.println();  
- 
-
-
-// MQTT can only transmit strings
-String hs="Hum: "+String((float)h)+" % ";
-String ts="Temp: "+String((float)t)+" C ";
+  }
+const char* y= (const char*)cipherhum;
+Serial.println(" ");
+Serial.println(y); 
 
 // PUBLISH to the MQTT Broker (topic = Temperature, defined at the beginning)
-if (client.publish(temperature_topic, str)) 
+if (client.publish(temperature_topic, String(t).c_str())) 
 {
   Serial.println("Temperature sent!");
 }
