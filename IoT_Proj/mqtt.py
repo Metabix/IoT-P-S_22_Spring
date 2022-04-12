@@ -27,16 +27,21 @@ def on_connect(client, userdata, flags, rc):
 
 
 def on_message(client, userdata, msg):
+    global a
 
     """The callback for when a PUBLISH message is received from the server."""
     if msg.topic=="home/livingroom/temperature":
         a=(msg.payload)
-        print(codecs.decode(a,'UTF-8'))
+        print("temp",a.decode('cp437'))
+        print(msg)
+        
         #print("temperature"+ ' ' + a)
     
     else:
         b=(msg.payload)
-        print(codecs.decode(b,'UTF-8'))
+        print("humid",b.decode('cp437'))
+        print(" ")
+        print(msg)
         #print("humidity"+ ' ' + b)
 
 
@@ -54,13 +59,13 @@ def main():
 
     mqtt_client.on_message = on_message
 
-
+    
 
     mqtt_client.connect(MQTT_ADDRESS, 1883)
 
     mqtt_client.loop_forever()
 
-
+    print("hey")
 
 
 
